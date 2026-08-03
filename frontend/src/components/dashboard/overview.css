@@ -1,0 +1,76 @@
+/* Overview dashboard — layout helpers that Tailwind alone can't express cleanly */
+
+.overview-donut-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.overview-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.overview-donut-center .n {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ra-navy);
+}
+
+.overview-donut-center .t {
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ra-muted);
+}
+
+.overview-bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ra-bg);
+  overflow: hidden;
+}
+
+.overview-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.rag-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.rag-pill--green {
+  background: color-mix(in srgb, var(--ra-green) 16%, transparent);
+  color: var(--ra-green);
+}
+
+.rag-pill--amber {
+  background: color-mix(in srgb, var(--ra-amber) 18%, transparent);
+  color: var(--ra-amber);
+}
+
+.rag-pill--red {
+  background: color-mix(in srgb, var(--ra-red) 16%, transparent);
+  color: var(--ra-red);
+}
+
+.rag-pill--unknown {
+  background: var(--ra-bg);
+  color: var(--ra-muted);
+}

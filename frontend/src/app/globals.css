@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Neutral enterprise palette for the reference architecture.
+   Never hardcode hex in components — use these tokens or Tailwind utilities. */
+
+:root {
+  --ra-accent: #2563eb;
+  --ra-accent-light: #3b82f6;
+  --ra-accent-dark: #1d4ed8;
+
+  --ra-navy: #0f172a;
+  --ra-navy-900: #0b1220;
+  --ra-navy-700: #1e3a5f;
+  --ra-ink: #1e293b;
+  --ra-ink-mid: #334155;
+  --ra-muted: #64748b;
+  --ra-line: #e2e8f0;
+  --ra-bg: #f1f5f9;
+  --ra-bg-soft: #f8fafc;
+  --ra-card: #ffffff;
+
+  --ra-green: #22945f;
+  --ra-amber: #f0a500;
+  --ra-red: #e62d1e;
+
+  /* Voice panel (dark surface) */
+  --ra-nav-text: #f8fbff;
+  --ra-nav-text-muted: rgba(226, 235, 244, 0.66);
+  --ra-nav-border: rgba(255, 255, 255, 0.08);
+  --ra-nav-interim-bg: rgba(37, 99, 235, 0.15);
+  --ra-hero-data-color: #bfdbfe;
+}
+
+@theme inline {
+  --color-ra-accent: var(--ra-accent);
+  --color-ra-accent-light: var(--ra-accent-light);
+  --color-ra-accent-dark: var(--ra-accent-dark);
+  --color-ra-navy: var(--ra-navy);
+  --color-ra-navy-900: var(--ra-navy-900);
+  --color-ra-navy-700: var(--ra-navy-700);
+  --color-ra-ink: var(--ra-ink);
+  --color-ra-ink-mid: var(--ra-ink-mid);
+  --color-ra-muted: var(--ra-muted);
+  --color-ra-line: var(--ra-line);
+  --color-ra-bg: var(--ra-bg);
+  --color-ra-bg-soft: var(--ra-bg-soft);
+  --color-ra-card: var(--ra-card);
+  --color-ra-green: var(--ra-green);
+  --color-ra-amber: var(--ra-amber);
+  --color-ra-red: var(--ra-red);
+  --color-ra-nav-text: var(--ra-nav-text);
+  --color-ra-nav-text-muted: var(--ra-nav-text-muted);
+  --color-ra-hero-data-color: var(--ra-hero-data-color);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ra-bg);
+  color: var(--ra-ink);
+  font-family: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+}
