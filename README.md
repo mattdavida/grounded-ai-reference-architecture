@@ -1,5 +1,7 @@
 # Grounded AI Reference Architecture
 
+![Grounded AI reference — Overview dashboard with Portfolio Assistant](./github_assets/eaim_reference_architecture.png)
+
 > **Audience:** senior developers on delivery projects (financial services, life
 > sciences, health, and adjacent sectors) who need a **runnable starter** for
 > grounding conversational AI in an existing operational system — including
@@ -216,8 +218,3 @@ Pattern v1 is a **vertical slice**: enough to run, demo, and adapt.
 - Bind agent tools / streaming responses  
 
 ---
-
-## License
-
-See repository license on GitHub (add a `LICENSE` file if you publish under a
-specific open-source license).
