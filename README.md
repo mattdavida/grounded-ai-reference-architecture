@@ -63,8 +63,8 @@ come from Python; the LLM only narrates them. Citations
 (`Source: Dashboard data YYYY-MM-DD`) make the boundary visible.
 
 > In the **UI**, “RAG” means **Red / Amber / Green** status — not
-> Retrieval-Augmented Generation. See [`ARCHITECTURE.md`](./ARCHITECTURE.md)
-> for context-size guidance when adapting beyond a small demo portfolio.
+> Retrieval-Augmented Generation. For large portfolios, see
+> [Handling context limits (scale)](./ARCHITECTURE.md#handling-context-limits-scale).
 
 Architecture notes: [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 
@@ -208,7 +208,7 @@ Details: [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 | Overview UI (KPIs, Red/Amber/Green donut, budget, table) | Done |
 | Synthetic seed + Alembic | Done |
 | Bicep deploy (`-SkipSpeech` supported) | Done |
-| Agent tools scaffold (not bound) | Scaffold only |
+| Agent tools scaffold | Code exists, but no tools connected |
 | Entra ID / RBAC / CI / Postgres profile | Not yet |
 | Extra dashboard tabs (detail, capacity, export) | Not yet |
 
@@ -217,7 +217,9 @@ Pattern v1 is a **vertical slice**: enough to run, demo, and adapt.
 ### Natural next steps (optional)
 
 - KPI / Red-Amber-Green click-through filters and project detail view  
-- Cap or filter LLM context for large entity sets (see ARCHITECTURE.md)  
+- Cap or filter LLM context for large entity sets
+  ([scale guidance](./ARCHITECTURE.md#handling-context-limits-scale))  
+
 
 - Entra ID + RBAC  
 - Postgres profile + CI  

@@ -16,6 +16,10 @@ numbers. The model only narrates a fresh, version-stamped context object.
 **Example domain:** synthetic project portfolio. Replace it with any operational
 entity set (claims, trials, loans, tickets) by swapping schema + services + seed.
 
+**Scale note:** the demo fits the whole portfolio in one prompt. For hundreds of
+entities, see [Handling context limits (scale)](#handling-context-limits-scale)
+before adapting.
+
 ---
 
 ## Runtime topology
@@ -64,7 +68,7 @@ token from `/api/speech/token` (refreshed at 9 minutes; STS expires at 10).
 
 1. Frontend fetches `/api/dashboard/overview` and `/api/projects`
 2. `compute_overview()` aggregates from SQLite
-3. UI renders KPIs, Red/Amber/Green (RAG status) donut, budget, initiatives table
+3. UI renders KPIs, Red/Amber/Green donut, budget, initiatives table
 
 > **Note on “RAG”:** in this repo, **RAG means Red / Amber / Green** project
 > health — not Retrieval-Augmented Generation. We deliberately avoid
@@ -89,38 +93,34 @@ token from `/api/speech/token` (refreshed at 9 minutes; STS expires at 10).
 
 ---
 
-## Context size and scale
+## Handling context limits (scale)
 
 Traditional list APIs paginate (`?limit=50&offset=100`). The LLM instead has a
 **token budget** for whatever you put in the system prompt.
 
 **What this reference does today**
 
-- Always inject **rolled-up aggregates** from `compute_overview()` (counts,
-  budget totals, status / risk breakdowns, executive summary).
-- Also inject a **line per parent initiative** (name, status, Red/Amber/Green,
-  risk, completion, owner, budget) so the model can answer “tell me about X.”
-- Seeded demo size is small (~6 parents). That fits comfortably in one prompt.
+`compute_overview()` + `build_portfolio_context()` format the **entire seeded
+portfolio** into the prompt: rolled-up aggregates (counts, budget totals, status
+/ risk breakdowns, executive summary) **plus** a detail line per parent
+initiative. The demo is small (~6 parents), so that fits comfortably.
 
-**What happens at 500 active projects?**
+**The pattern when you adapt to hundreds of rows**
 
-The current builder does **not** paginate or hard-cap the detail list. Dumping
-every row into the prompt will eventually hit model context limits, raise cost,
-and degrade answer quality. That is an intentional adaptation point, not a
-hidden magically-scaled feature.
-
-**When you adapt a large domain, keep aggregates always; shrink detail:**
+You cannot pass every production row. Your Python service must **pre-aggregate
+(and usually filter) before** formatting the context string — the LLM summarizes
+the summary. Keep rollups always; shrink detail.
 
 | Strategy | When to use |
 |---|---|
 | Aggregates only + watchlist / exceptions | Default for large portfolios |
 | Top-N by risk, variance, or area | Leadership “what needs attention?” |
 | Filter in `build_*_context()` (status, area, owner) | User already narrowed the question |
-| Tool calling for drill-down (scaffold in `tools.py`) | “Tell me about project X” without listing all rows |
+| Tool calling for drill-down (`tools.py` scaffold exists; not connected yet) | “Tell me about project X” without listing all rows |
 
-APIs for the UI can still paginate independently — dashboard tables and LLM
-context are separate concerns. Do not assume “the chat path inherits UI
-pagination.”
+The current builder does **not** hard-cap the detail list — that is an
+intentional adaptation point, not a magically scaled feature. UI list APIs can
+still paginate independently; do not assume the chat path inherits UI pagination.
 
 ---
 
@@ -176,7 +176,7 @@ an Alembic connection-string change, not a rewrite.
 | Browser credentials | Short-lived Speech STS only | Unchanged |
 | AuthN/AuthZ | None (local demo) | Entra ID + RBAC |
 | Audit of Q&A | Not persisted | Log session + data_version |
-| Agent tools | Scaffolded, disabled | Bound ToolNode (Phase 4) |
+| Agent tools | Code exists in `tools.py`, but no tools connected | Wire ToolNode / bind_tools |
 
 ---
 
