@@ -1,5 +1,6 @@
 import type { OverviewResponse } from "@/lib/api/dashboard";
 import type { ProjectSummary } from "@/lib/api/projects";
+import type { KpiFilter } from "@/lib/dashboard-navigation";
 
 import { BudgetCard } from "./BudgetCard";
 import { KpiCards } from "./KpiCards";
@@ -11,9 +12,21 @@ type Props = {
   overview: OverviewResponse | null;
   projects: ProjectSummary[];
   error: string | null;
+  onKpiClick?: (filter: KpiFilter) => void;
+  onRagClick?: (rag: string) => void;
+  onAreaClick?: (area: string) => void;
+  onSelectProject?: (portfolioId: string) => void;
 };
 
-export function OverviewDashboard({ overview, projects, error }: Props) {
+export function OverviewDashboard({
+  overview,
+  projects,
+  error,
+  onKpiClick,
+  onRagClick,
+  onAreaClick,
+  onSelectProject,
+}: Props) {
   if (error) {
     return (
       <div className="rounded-xl border border-ra-line bg-ra-card p-6">
@@ -36,7 +49,7 @@ export function OverviewDashboard({ overview, projects, error }: Props) {
 
   return (
     <div className="space-y-6">
-      <KpiCards overview={overview} />
+      <KpiCards overview={overview} onKpiClick={onKpiClick} />
 
       <section className="rounded-xl border border-ra-line bg-ra-card p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -54,20 +67,20 @@ export function OverviewDashboard({ overview, projects, error }: Props) {
         <article className="rounded-xl border border-ra-line bg-ra-card p-5 shadow-sm">
           <h2 className="text-base font-semibold text-ra-navy">Portfolio health</h2>
           <p className="mt-1 text-xs text-ra-muted">
-            RAG distribution across parent initiatives
+            Click a RAG segment to open the filtered Portfolio list
           </p>
           <div className="mt-5">
-            <RagDonut rag={overview.rag} />
+            <RagDonut rag={overview.rag} onRagClick={onRagClick} />
           </div>
         </article>
 
         <article className="rounded-xl border border-ra-line bg-ra-card p-5 shadow-sm">
           <h2 className="text-base font-semibold text-ra-navy">Watchlist by area</h2>
           <p className="mt-1 text-xs text-ra-muted">
-            Amber / red RAG or blocked / on hold
+            Click an area to filter Portfolio by owner area
           </p>
           <div className="mt-5">
-            <WatchlistByArea projects={projects} />
+            <WatchlistByArea projects={projects} onAreaClick={onAreaClick} />
           </div>
         </article>
       </section>
@@ -86,14 +99,14 @@ export function OverviewDashboard({ overview, projects, error }: Props) {
             <div>
               <h2 className="text-base font-semibold text-ra-navy">Portfolio initiatives</h2>
               <p className="mt-1 text-xs text-ra-muted">
-                Watchlist items sort first — ask the assistant about any row by name
+                Click a row for detail — ask the assistant about any initiative by name
               </p>
             </div>
             <span className="text-xs font-medium text-ra-muted">
               {projects.length} projects
             </span>
           </div>
-          <ProjectsTable projects={projects} />
+          <ProjectsTable projects={projects} onSelectProject={onSelectProject} />
         </article>
       </section>
     </div>

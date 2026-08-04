@@ -1,16 +1,18 @@
 import type { OverviewResponse } from "@/lib/api/dashboard";
+import { kpiFilterForLabel, type KpiFilter } from "@/lib/dashboard-navigation";
 import { formatCurrency, formatPct } from "@/lib/format";
 
 type Props = {
   overview: OverviewResponse;
+  onKpiClick?: (filter: KpiFilter) => void;
 };
 
-export function KpiCards({ overview }: Props) {
+export function KpiCards({ overview, onKpiClick }: Props) {
   const cards = [
     {
       label: "Total initiatives",
       value: String(overview.total_projects),
-      sub: "Visible portfolio",
+      sub: "Click to open portfolio",
     },
     {
       label: "Active",
@@ -46,20 +48,46 @@ export function KpiCards({ overview }: Props) {
 
   return (
     <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-      {cards.map((card) => (
-        <article
-          key={card.label}
-          className="rounded-xl border border-ra-line border-t-[3px] border-t-ra-accent bg-ra-card px-4 py-4 shadow-sm"
-        >
-          <p className="text-xs font-medium uppercase tracking-wide text-ra-muted">
-            {card.label}
-          </p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-ra-navy">
-            {card.value}
-          </p>
-          <p className="mt-1 text-xs text-ra-muted">{card.sub}</p>
-        </article>
-      ))}
+      {cards.map((card) => {
+        const filter = kpiFilterForLabel(card.label);
+        const clickable = Boolean(onKpiClick && filter);
+        return (
+          <article
+            key={card.label}
+            className={`rounded-xl border border-ra-line border-t-[3px] border-t-ra-accent bg-ra-card px-4 py-4 shadow-sm ${
+              clickable
+                ? "cursor-pointer transition-colors hover:bg-ra-bg-soft focus-within:ring-2 focus-within:ring-ra-accent"
+                : ""
+            }`}
+          >
+            {clickable ? (
+              <button
+                type="button"
+                className="w-full text-left"
+                onClick={() => filter && onKpiClick?.(filter)}
+              >
+                <p className="text-xs font-medium uppercase tracking-wide text-ra-muted">
+                  {card.label}
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-ra-navy">
+                  {card.value}
+                </p>
+                <p className="mt-1 text-xs text-ra-muted">{card.sub}</p>
+              </button>
+            ) : (
+              <>
+                <p className="text-xs font-medium uppercase tracking-wide text-ra-muted">
+                  {card.label}
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-ra-navy">
+                  {card.value}
+                </p>
+                <p className="mt-1 text-xs text-ra-muted">{card.sub}</p>
+              </>
+            )}
+          </article>
+        );
+      })}
     </section>
   );
 }

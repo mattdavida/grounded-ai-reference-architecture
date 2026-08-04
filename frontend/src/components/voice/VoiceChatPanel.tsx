@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Bot, Send, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import {
+  Bot,
+  Maximize2,
+  Minimize2,
+  Send,
+  Trash2,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 
 import { useChatSession } from "@/hooks/useChatSession";
 import { useSpeechRecognizer } from "@/hooks/useSpeechRecognizer";
@@ -13,6 +22,17 @@ import "./voice.css";
 
 const SPEED_OPTIONS = [0.75, 1.0, 1.25, 1.5, 2.0] as const;
 type Speed = (typeof SPEED_OPTIONS)[number];
+
+const EXPANDED_KEY = "eaim.voice.expanded";
+
+function readExpandedPreference(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(EXPANDED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 function stripCitation(text: string) {
   return text.replace(/[\n\r]*Source:\s*[\s\S]+$/, "").trim();
@@ -34,6 +54,7 @@ function stripMarkdown(text: string): string {
 
 export function VoiceChatPanel() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [voiceMode, setVoiceMode] = useState(true);
   const [readSpeed, setReadSpeed] = useState<Speed>(1.0);
@@ -46,15 +67,32 @@ export function VoiceChatPanel() {
   const { speechToken } = useSpeechToken();
   const { startListening, stopListening } = useSpeechRecognizer();
   const { speak, stopSpeaking } = useSpeechSynthesizer();
-  const { history, isLoading, chatError, sendMessage, clearSession } = useChatSession();
+  const { history, isLoading, statusMessage, chatError, sendMessage, clearSession } =
+    useChatSession();
+
+  useEffect(() => {
+    setIsExpanded(readExpandedPreference());
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [history, interimText]);
+  }, [history, interimText, statusMessage, isExpanded]);
 
   useEffect(() => {
     if (chatError) showError(chatError);
   }, [chatError]);
+
+  function toggleExpanded() {
+    setIsExpanded((prev) => {
+      const next = !prev;
+      try {
+        sessionStorage.setItem(EXPANDED_KEY, next ? "1" : "0");
+      } catch {
+        /* ignore quota / private mode */
+      }
+      return next;
+    });
+  }
 
   function showError(msg: string) {
     setErrorBanner(msg);
@@ -163,7 +201,11 @@ export function VoiceChatPanel() {
 
       {isOpen && (
         <div
-          className="voice-panel-enter fixed bottom-6 right-6 z-[900] flex h-[520px] w-[460px] flex-col overflow-hidden rounded-2xl shadow-2xl"
+          className={`voice-panel-enter fixed z-[900] flex flex-col overflow-hidden rounded-2xl shadow-2xl transition-[width,height,top,bottom] duration-200 ease-out ${
+            isExpanded
+              ? "bottom-4 right-4 top-[5.5rem] w-[min(520px,calc(100vw-2rem))] sm:bottom-6 sm:right-6"
+              : "bottom-6 right-6 h-[520px] w-[460px] max-w-[calc(100vw-2rem)]"
+          }`}
           style={{
             background: "var(--ra-navy-900)",
             border: "1px solid var(--ra-nav-border)",
@@ -185,6 +227,15 @@ export function VoiceChatPanel() {
               )}
             </div>
             <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={toggleExpanded}
+                title={isExpanded ? "Collapse panel" : "Expand panel"}
+                aria-label={isExpanded ? "Collapse panel" : "Expand panel"}
+                className="rounded p-1.5 text-ra-nav-text-muted transition-colors hover:bg-white/10 hover:text-ra-nav-text"
+              >
+                {isExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+              </button>
               {speechToken && (
                 <button
                   type="button"
@@ -260,37 +311,25 @@ export function VoiceChatPanel() {
               </div>
             )}
 
-            {isLoading && (
-              <div className="mb-3 flex justify-start">
-                <div
-                  className="flex items-center gap-1.5 rounded-xl rounded-bl-sm px-4 py-3"
-                  style={{
-                    background: "var(--ra-card)",
-                    border: "1px solid var(--ra-line)",
-                  }}
-                >
-                  <span className="voice-dot h-1.5 w-1.5 rounded-full bg-ra-muted" />
-                  <span className="voice-dot h-1.5 w-1.5 rounded-full bg-ra-muted" />
-                  <span className="voice-dot h-1.5 w-1.5 rounded-full bg-ra-muted" />
-                </div>
-              </div>
+            {statusMessage && (
+              <p className="mb-2 px-1 text-[11px] text-ra-muted">{statusMessage}</p>
             )}
 
             <div ref={messagesEndRef} />
           </div>
 
-          {voiceState !== "idle" && (
+          {(voiceState !== "idle" || isLoading) && (
             <div className="px-4 py-1 text-center text-[11px] text-ra-nav-text-muted">
-              {
-                {
-                  connecting: "Connecting… ready in a moment",
-                  listening: "Listening — speak now",
-                  processing: "Thinking…",
-                  speaking: "Speaking…",
-                  error: "Error — please try again",
-                  idle: "",
-                }[voiceState]
-              }
+              {statusMessage
+                ? statusMessage
+                : {
+                    connecting: "Connecting… ready in a moment",
+                    listening: "Listening — speak now",
+                    processing: "Streaming answer…",
+                    speaking: "Speaking…",
+                    error: "Error — please try again",
+                    idle: isLoading ? "Streaming answer…" : "",
+                  }[voiceState]}
             </div>
           )}
 

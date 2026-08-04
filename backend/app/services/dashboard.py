@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Project, RowType
 from app.schemas.dashboard import BudgetOverview, OverviewResponse, RagCounts
+from app.services.projects import is_watchlist
 
 # Keep in sync with frontend design tokens (RAG colours).
 RAG_COLORS = {
@@ -32,12 +33,7 @@ def compute_overview(session: Session) -> OverviewResponse:
     completed = sum(1 for p in projects if (p.project_status or "").lower() == "completed")
     blocked = sum(1 for p in projects if (p.project_status or "").lower() == "blocked")
     active = total - completed
-    watchlist = sum(
-        1
-        for p in projects
-        if (p.rag_status or "").lower() in {"amber", "red"}
-        or (p.project_status or "").lower() in {"blocked", "on hold"}
-    )
+    watchlist = sum(1 for p in projects if is_watchlist(p))
 
     completions = [p.completion_pct for p in projects if p.completion_pct is not None]
     avg_completion = round(sum(completions) / len(completions), 1) if completions else 0.0

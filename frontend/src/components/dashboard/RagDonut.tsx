@@ -7,6 +7,7 @@ import "./overview.css";
 
 type Props = {
   rag: OverviewResponse["rag"];
+  onRagClick?: (rag: string) => void;
 };
 
 const COLORS = {
@@ -15,7 +16,7 @@ const COLORS = {
   Red: "var(--ra-red)",
 } as const;
 
-export function RagDonut({ rag }: Props) {
+export function RagDonut({ rag, onRagClick }: Props) {
   const data = [
     { status: "Green", count: rag.green, color: COLORS.Green },
     { status: "Amber", count: rag.amber, color: COLORS.Amber },
@@ -54,34 +55,49 @@ export function RagDonut({ rag }: Props) {
       </div>
 
       <div className="w-full min-w-0 flex-1 space-y-3">
-        {data.map((item) => (
-          <div key={item.status}>
-            <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-ra-ink-mid">
-                <span
-                  className="inline-block h-2.5 w-2.5 rounded-full"
-                  style={{ background: item.color }}
-                />
-                {item.status}
-              </span>
-              <span className="font-semibold text-ra-navy">
-                {item.count}
-                <span className="ml-1.5 text-xs font-normal text-ra-muted">
-                  ({Math.round((item.count / total) * 100)}%)
+        {data.map((item) => {
+          const clickable = Boolean(onRagClick && item.count > 0);
+          const body = (
+            <>
+              <div className="mb-1 flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2 text-ra-ink-mid">
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full"
+                    style={{ background: item.color }}
+                  />
+                  {item.status}
                 </span>
-              </span>
-            </div>
-            <div className="overview-bar-track">
-              <div
-                className="overview-bar-fill"
-                style={{
-                  width: `${(item.count / max) * 100}%`,
-                  background: item.color,
-                }}
-              />
-            </div>
-          </div>
-        ))}
+                <span className="font-semibold text-ra-navy">
+                  {item.count}
+                  <span className="ml-1.5 text-xs font-normal text-ra-muted">
+                    ({Math.round((item.count / total) * 100)}%)
+                  </span>
+                </span>
+              </div>
+              <div className="overview-bar-track">
+                <div
+                  className="overview-bar-fill"
+                  style={{
+                    width: `${(item.count / max) * 100}%`,
+                    background: item.color,
+                  }}
+                />
+              </div>
+            </>
+          );
+          return clickable ? (
+            <button
+              key={item.status}
+              type="button"
+              className="w-full rounded-md text-left transition-colors hover:bg-ra-bg-soft"
+              onClick={() => onRagClick?.(item.status)}
+            >
+              {body}
+            </button>
+          ) : (
+            <div key={item.status}>{body}</div>
+          );
+        })}
       </div>
     </div>
   );

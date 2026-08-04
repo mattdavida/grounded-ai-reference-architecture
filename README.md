@@ -178,9 +178,10 @@ Add AI when you are ready — the grounded-context path is already wired.
 
 ```
 backend/          FastAPI, business logic, LangGraph chat, Speech token
-frontend/         Next.js Overview dashboard + voice assistant
+frontend/         Next.js dashboard tabs + voice assistant
 infra/            Azure Bicep (OpenAI, Speech, Key Vault, optional App Service)
 ARCHITECTURE.md   Boundaries, request flows, adaptation contract
+future-plan.md    Pre-0 → Phase 4 product-depth checklist
 ```
 
 ---
@@ -208,21 +209,22 @@ Details: [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 | Overview UI (KPIs, Red/Amber/Green donut, budget, table) | Done |
 | Synthetic seed + Alembic | Done |
 | Bicep deploy (`-SkipSpeech` supported) | Done |
-| Agent tools scaffold | Code exists, but no tools connected |
-| Entra ID / RBAC / CI / Postgres profile | Not yet |
-| Extra dashboard tabs (detail, capacity, export) | Not yet |
+| Portfolio / Watchlist / Detail tabs + KPI drill-down | Done (Phase 1) |
+| Agent tools + ToolNode | Done (Phase 4 core) |
+| Capacity planning (owner/area FTE load) | Done (Phase 2) |
+| Exports (JSON/CSV packs) | Done (Phase 2) |
+| Entra ID / RBAC / CI / Postgres profile | Not yet (Phase 3) |
+| Streaming chat (SSE) | Done (Phase 4) |
+| Proactive alerts (watchlist/capacity tab) | Done (Phase 4) |
 
-Pattern v1 is a **vertical slice**: enough to run, demo, and adapt.
+Pattern v1 is a **vertical slice**: enough to run, demo, and adapt. Product-depth
+phases (tabs, tools, capacity, exports, alerts) are tracked in
+[`future-plan.md`](./future-plan.md).
 
-### Natural next steps (optional)
+### Natural next steps
 
-- KPI / Red-Amber-Green click-through filters and project detail view  
-- Cap or filter LLM context for large entity sets
-  ([scale guidance](./ARCHITECTURE.md#handling-context-limits-scale))  
-
-
-- Entra ID + RBAC  
-- Postgres profile + CI  
-- Bind agent tools / streaming responses  
+See the checklist in [`future-plan.md`](./future-plan.md). Highest-value remaining
+after product-depth v1: Entra/RBAC and cap/filter LLM context for large entity sets
+([scale guidance](./ARCHITECTURE.md#handling-context-limits-scale)).
 
 ---

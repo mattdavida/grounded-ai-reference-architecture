@@ -4,6 +4,7 @@ import "./overview.css";
 
 type Props = {
   projects: ProjectSummary[];
+  onSelectProject?: (portfolioId: string) => void;
 };
 
 function ragClass(rag: string | null): string {
@@ -14,7 +15,7 @@ function ragClass(rag: string | null): string {
   return "rag-pill--unknown";
 }
 
-export function ProjectsTable({ projects }: Props) {
+export function ProjectsTable({ projects, onSelectProject }: Props) {
   if (projects.length === 0) {
     return (
       <p className="text-sm text-ra-muted">
@@ -49,7 +50,10 @@ export function ProjectsTable({ projects }: Props) {
           {sorted.map((p) => (
             <tr
               key={p.portfolio_id}
-              className="border-b border-ra-line/80 transition-colors hover:bg-ra-bg-soft"
+              className={`border-b border-ra-line/80 transition-colors hover:bg-ra-bg-soft ${
+                onSelectProject ? "cursor-pointer" : ""
+              }`}
+              onClick={() => onSelectProject?.(p.portfolio_id)}
             >
               <td className="px-3 py-3">
                 <div className="font-medium text-ra-navy">{p.name}</div>

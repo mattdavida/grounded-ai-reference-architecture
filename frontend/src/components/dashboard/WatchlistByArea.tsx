@@ -3,9 +3,10 @@ import "./overview.css";
 
 type Props = {
   projects: ProjectSummary[];
+  onAreaClick?: (area: string) => void;
 };
 
-export function WatchlistByArea({ projects }: Props) {
+export function WatchlistByArea({ projects, onAreaClick }: Props) {
   const counts = new Map<string, number>();
   for (const p of projects) {
     if (!isWatchlist(p)) continue;
@@ -27,23 +28,37 @@ export function WatchlistByArea({ projects }: Props) {
 
   return (
     <div className="space-y-3">
-      {rows.map((row) => (
-        <div key={row.area}>
-          <div className="mb-1 flex items-center justify-between text-sm">
-            <span className="text-ra-ink-mid">{row.area}</span>
-            <span className="font-semibold text-ra-navy">{row.count}</span>
-          </div>
-          <div className="overview-bar-track">
-            <div
-              className="overview-bar-fill"
-              style={{
-                width: `${(row.count / max) * 100}%`,
-                background: "var(--ra-accent)",
-              }}
-            />
-          </div>
-        </div>
-      ))}
+      {rows.map((row) => {
+        const body = (
+          <>
+            <div className="mb-1 flex items-center justify-between text-sm">
+              <span className="text-ra-ink-mid">{row.area}</span>
+              <span className="font-semibold text-ra-navy">{row.count}</span>
+            </div>
+            <div className="overview-bar-track">
+              <div
+                className="overview-bar-fill"
+                style={{
+                  width: `${(row.count / max) * 100}%`,
+                  background: "var(--ra-accent)",
+                }}
+              />
+            </div>
+          </>
+        );
+        return onAreaClick ? (
+          <button
+            key={row.area}
+            type="button"
+            className="w-full rounded-md text-left transition-colors hover:bg-ra-bg-soft"
+            onClick={() => onAreaClick(row.area)}
+          >
+            {body}
+          </button>
+        ) : (
+          <div key={row.area}>{body}</div>
+        );
+      })}
     </div>
   );
 }

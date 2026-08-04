@@ -1,38 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
-import { OverviewDashboard } from "@/components/dashboard/OverviewDashboard";
-import { fetchOverview, type OverviewResponse } from "@/lib/api/dashboard";
-import { fetchProjects, type ProjectSummary } from "@/lib/api/projects";
+import { AppShell } from "@/components/AppShell";
+import { DashboardClient } from "@/components/dashboard/DashboardClient";
+import { fetchOverview } from "@/lib/api/dashboard";
 
 export default function HomePage() {
-  const [overview, setOverview] = useState<OverviewResponse | null>(null);
-  const [projects, setProjects] = useState<ProjectSummary[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [dataVersion, setDataVersion] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-
-    Promise.all([fetchOverview(), fetchProjects()])
-      .then(([overviewData, projectData]) => {
-        if (cancelled) return;
-        setOverview(overviewData);
-        setProjects(projectData);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Unknown error");
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    fetchOverview()
+      .then((o) => setDataVersion(o.data_version))
+      .catch(() => setDataVersion(null));
   }, []);
 
   return (
-    <main className="min-h-screen bg-ra-bg">
+    <AppShell dataVersion={dataVersion}>
       <header className="relative overflow-hidden border-b border-ra-line bg-ra-navy-900 text-white">
         <div
           className="pointer-events-none absolute inset-0 opacity-40"
@@ -44,7 +28,7 @@ export default function HomePage() {
         <div className="relative mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/60">
-              Reference Architecture
+              Grounded AI Reference
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
               Enterprise AI Modernization
@@ -54,13 +38,13 @@ export default function HomePage() {
               LLM never touches raw data.
             </p>
           </div>
-          {overview && (
-            <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
+          {dataVersion && (
+            <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm lg:hidden">
               <p className="text-[11px] uppercase tracking-wide text-white/55">
                 Data version
               </p>
               <p className="mt-1 text-sm font-medium text-ra-hero-data-color">
-                {overview.data_version}
+                {dataVersion}
               </p>
             </div>
           )}
@@ -68,16 +52,16 @@ export default function HomePage() {
       </header>
 
       <section className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-5 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold text-ra-navy">Portfolio overview</h2>
-            <p className="mt-1 text-sm text-ra-muted">
-              Key indicators, health, and initiatives in one view.
-            </p>
-          </div>
-        </div>
-        <OverviewDashboard overview={overview} projects={projects} error={error} />
+        <Suspense
+          fallback={
+            <div className="rounded-xl border border-ra-line bg-ra-card p-6 text-ra-muted">
+              Loading dashboard…
+            </div>
+          }
+        >
+          <DashboardClient />
+        </Suspense>
       </section>
-    </main>
+    </AppShell>
   );
 }

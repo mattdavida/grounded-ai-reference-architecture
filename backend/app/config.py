@@ -40,5 +40,9 @@ class Settings(BaseSettings):
     # ── LangGraph conversation checkpointer ───────────────────────────────────
     checkpoints_db: str = str(BACKEND_DIR / "voice_chat.db")
 
+    # ── Agent tools (Phase 4) ─────────────────────────────────────────────────
+    # When true, the chat graph binds portfolio tools and runs a ToolNode loop.
+    voice_chat_tools_enabled: bool = True
+
 
 settings = Settings()

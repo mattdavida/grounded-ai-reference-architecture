@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import BACKEND_DIR, settings
-from app.routers import chat, dashboard, health, projects, speech
+from app.routers import alerts, capacity, chat, dashboard, exports, health, projects, speech
 
 logging.basicConfig(
     level=settings.log_level,
@@ -53,6 +53,9 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(projects.router)
     app.include_router(dashboard.router)
+    app.include_router(capacity.router)
+    app.include_router(alerts.router)
+    app.include_router(exports.router)
     app.include_router(speech.router)
     app.include_router(chat.router)
     return app

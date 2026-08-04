@@ -1,40 +1,59 @@
-"""Projects list stub — returns synthetic portfolio rows once seeded."""
+"""Projects list + detail — filtered queries shared with agent tools."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models.project import Project, RowType
+from app.schemas.project import ProjectDetail, ProjectListResponse, ProjectSummary
+from app.services import projects as projects_service
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 
-class ProjectSummary(BaseModel):
-    portfolio_id: str
-    name: str
-    area: str | None
-    owner: str | None
-    rag_status: str | None
-    project_status: str | None
-    risk_level: str | None
-    completion_pct: float | None
-    approved_budget: float | None
-    budget_variance: float | None
+@router.get("", response_model=ProjectListResponse)
+def list_projects(
+    session: Session = Depends(get_session),
+    area: str | None = Query(default=None, description="Filter by owner area"),
+    rag: str | None = Query(default=None, description="Filter by RAG status"),
+    status: str | None = Query(default=None, description="Filter by project status"),
+    risk: str | None = Query(default=None, description="Filter by risk level"),
+    watchlist: bool | None = Query(
+        default=None, description="If true, only attention/watchlist rows"
+    ),
+    kpi_filter: str | None = Query(
+        default=None,
+        alias="filter",
+        description="KPI quick-filter (totalAll, active, completed, …)",
+    ),
+    sort: str = Query(default="monitor", description="monitor | name | ordinal"),
+) -> ProjectListResponse:
+    """List parent initiatives with optional filters."""
+    rows = projects_service.list_projects(
+        session,
+        area=area,
+        rag=rag,
+        status=status,
+        risk=risk,
+        watchlist=watchlist,
+        kpi_filter=kpi_filter,
+        sort=sort,
+    )
+    return ProjectListResponse(
+        items=[ProjectSummary.model_validate(r) for r in rows],
+        total=len(rows),
+    )
 
-    model_config = {"from_attributes": True}
 
-
-@router.get("", response_model=list[ProjectSummary])
-def list_projects(session: Session = Depends(get_session)) -> list[ProjectSummary]:
-    """List parent initiatives (excludes sub-phases and archived rows)."""
-    rows = session.scalars(
-        select(Project)
-        .where(Project.row_type == RowType.PARENT)
-        .where(Project.is_archived.is_(False))
-        .order_by(Project.ordinal, Project.name)
-    ).all()
-    return [ProjectSummary.model_validate(r) for r in rows]
+@router.get("/{portfolio_id}", response_model=ProjectDetail)
+def get_project(
+    portfolio_id: str, session: Session = Depends(get_session)
+) -> ProjectDetail:
+    """Return a single initiative by portfolio id."""
+    project = projects_service.get_project(session, portfolio_id)
+    if project is None:
+        raise HTTPException(
+            status_code=404, detail=f"Project {portfolio_id!r} not found"
+        )
+    return ProjectDetail.model_validate(project)

@@ -51,6 +51,12 @@ class Project(Base):
     planned_finish: Mapped[date | None] = mapped_column(Date)
     last_update: Mapped[date | None] = mapped_column(Date)
 
+    # Capacity planning (Phase 2) — synthetic FTE demand per initiative.
+    fte_demand: Mapped[float | None] = mapped_column(Float, default=0.0)
+    overallocation: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="0"
+    )
+
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

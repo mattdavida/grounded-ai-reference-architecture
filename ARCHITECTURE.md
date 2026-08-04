@@ -31,9 +31,13 @@ Browser (Next.js :4001)
 FastAPI (:8000)
   ├─ /api/health
   ├─ /api/dashboard/overview   → compute_overview(session)
-  ├─ /api/projects             → SQLAlchemy query
+  ├─ /api/projects             → filtered list + detail
+  ├─ /api/capacity             → owner/area FTE load rollups
+  ├─ /api/alerts               → proactive watchlist/capacity signals
+  ├─ /api/exports/{kind}       → JSON/CSV grounded packs
   ├─ /api/speech/token         → Azure STS (API key never in browser)
-  └─ /api/chat                 → build_portfolio_context() then LangGraph.invoke()
+  └─ /api/chat                 → grounded LangGraph turn (JSON)
+     /api/chat/stream          → same pipeline as SSE (token + tool status)
         │
         ├─ Azure OpenAI (chat)
         └─ SQLite checkpointer (conversation history for multi-turn memory —
@@ -52,7 +56,7 @@ token from `/api/speech/token` (refreshed at 9 minutes; STS expires at 10).
 | Models + Alembic | Schema | Business KPIs |
 | `services/dashboard.py` | Deterministic KPIs / rollups | Call the LLM |
 | `voice_chat/context.py` | Format facts for the prompt | Invent numbers |
-| `voice_chat/graph.py` | LLM turn + memory | Hit the database |
+| `voice_chat/graph.py` | LLM turn + ToolNode + memory | Own SQL / invent metrics |
 | Routers | HTTP + authz (future) | Embed domain math |
 | Frontend | Presentation + voice UX | Hold long-lived Azure keys |
 | `infra/` | Azure resources | Contain app business rules |
@@ -76,13 +80,15 @@ token from `/api/speech/token` (refreshed at 9 minutes; STS expires at 10).
 
 ### Chat turn
 
-1. `POST /api/chat` `{ message, session_id? }`
+1. `POST /api/chat/stream` `{ message, session_id? }` (UI) or `POST /api/chat` (JSON)
 2. Router rebuilds portfolio context (fresh numbers every turn)
 3. LangGraph runs with `thread_id = session_id` — the SQLite checkpointer only
    stores prior messages for that session so follow-ups like “tell me more”
    work (again: conversation memory, not embeddings)
-4. Response includes `answer`, `data_version`, `session_id`
-5. UI strips `Source: …` into a citation badge; TTS omits the citation line
+4. Stream emits SSE `meta` → optional `status` (tool lookup) → `token*` → `done`
+   (JSON route returns `answer`, `data_version`, `session_id` in one shot)
+5. UI appends tokens live; strips `Source: …` into a citation badge; TTS waits
+   for the final answer and omits the citation line
 
 ### Speech
 
@@ -116,7 +122,7 @@ the summary. Keep rollups always; shrink detail.
 | Aggregates only + watchlist / exceptions | Default for large portfolios |
 | Top-N by risk, variance, or area | Leadership “what needs attention?” |
 | Filter in `build_*_context()` (status, area, owner) | User already narrowed the question |
-| Tool calling for drill-down (`tools.py` scaffold exists; not connected yet) | “Tell me about project X” without listing all rows |
+| Tool calling for drill-down (`tools.py` + ToolNode; `VOICE_CHAT_TOOLS_ENABLED`) | “Tell me about project X” without listing all rows |
 
 The current builder does **not** hard-cap the detail list — that is an
 intentional adaptation point, not a magically scaled feature. UI list APIs can
@@ -176,7 +182,7 @@ an Alembic connection-string change, not a rewrite.
 | Browser credentials | Short-lived Speech STS only | Unchanged |
 | AuthN/AuthZ | None (local demo) | Entra ID + RBAC |
 | Audit of Q&A | Not persisted | Log session + data_version |
-| Agent tools | Code exists in `tools.py`, but no tools connected | Wire ToolNode / bind_tools |
+| Agent tools | ToolNode wired; tools call `services/projects.py` | RBAC-aware tools (Phase 3) |
 
 ---
 
@@ -200,3 +206,4 @@ Expect a factual answer that matches `/api/dashboard/overview` and ends with
 ## Related docs
 
 - [`README.md`](./README.md) — quick start, non-goals, change/leave table, status  
+- [`future-plan.md`](./future-plan.md) — Pre-0 → Phase 4 checklist and product-depth track  

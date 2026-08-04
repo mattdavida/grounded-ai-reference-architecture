@@ -34,7 +34,7 @@ export function ChatMessage({ entry }: Props) {
       >
         {isUser ? (
           <p className="whitespace-pre-wrap">{bodyText}</p>
-        ) : (
+        ) : bodyText ? (
           <div className="markdown-body">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -83,10 +83,21 @@ export function ChatMessage({ entry }: Props) {
             >
               {bodyText}
             </ReactMarkdown>
+            {entry.streaming && (
+              <span
+                className="ml-0.5 inline-block h-3 w-1.5 animate-pulse align-middle"
+                style={{ background: "var(--ra-accent)" }}
+                aria-hidden
+              />
+            )}
           </div>
+        ) : (
+          <p className="text-ra-muted">
+            {entry.streaming ? "Thinking…" : ""}
+          </p>
         )}
 
-        {!isUser && citationLabel && (
+        {!isUser && !entry.streaming && citationLabel && (
           <span
             className="mt-2 inline-block rounded px-2 py-0.5 text-[10px] font-medium"
             style={{
