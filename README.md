@@ -58,9 +58,13 @@ Operational System  (ERP, CRM, core, LIMS, spreadsheet, …)
 ```
 
 **Why this matters:** for operational UIs where users ask quantitative questions,
-precomputed context beats RAG over raw rows. Numbers come from Python; the LLM
-only narrates them. Citations (`Source: Dashboard data YYYY-MM-DD`) make the
-boundary visible.
+precomputed context beats retrieval-over-raw-rows (classic document RAG). Numbers
+come from Python; the LLM only narrates them. Citations
+(`Source: Dashboard data YYYY-MM-DD`) make the boundary visible.
+
+> In the **UI**, “RAG” means **Red / Amber / Green** status — not
+> Retrieval-Augmented Generation. See [`ARCHITECTURE.md`](./ARCHITECTURE.md)
+> for context-size guidance when adapting beyond a small demo portfolio.
 
 Architecture notes: [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 
@@ -201,7 +205,7 @@ Details: [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 |---|---|
 | Grounded LangGraph chat + citations | Done |
 | Azure Speech STT/TTS + server-side tokens | Done |
-| Overview UI (KPIs, RAG donut, budget, table) | Done |
+| Overview UI (KPIs, Red/Amber/Green donut, budget, table) | Done |
 | Synthetic seed + Alembic | Done |
 | Bicep deploy (`-SkipSpeech` supported) | Done |
 | Agent tools scaffold (not bound) | Scaffold only |
@@ -212,7 +216,9 @@ Pattern v1 is a **vertical slice**: enough to run, demo, and adapt.
 
 ### Natural next steps (optional)
 
-- KPI / RAG click-through filters and project detail view  
+- KPI / Red-Amber-Green click-through filters and project detail view  
+- Cap or filter LLM context for large entity sets (see ARCHITECTURE.md)  
+
 - Entra ID + RBAC  
 - Postgres profile + CI  
 - Bind agent tools / streaming responses  

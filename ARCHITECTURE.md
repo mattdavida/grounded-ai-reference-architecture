@@ -32,7 +32,8 @@ FastAPI (:8000)
   └─ /api/chat                 → build_portfolio_context() then LangGraph.invoke()
         │
         ├─ Azure OpenAI (chat)
-        └─ SQLite checkpointer (multi-turn session_id)
+        └─ SQLite checkpointer (conversation history for multi-turn memory —
+             keyed by session_id; not a vector / embedding store)
 ```
 
 Voice STT/TTS runs in the browser via the Azure Speech SDK using the short-lived
@@ -63,13 +64,19 @@ token from `/api/speech/token` (refreshed at 9 minutes; STS expires at 10).
 
 1. Frontend fetches `/api/dashboard/overview` and `/api/projects`
 2. `compute_overview()` aggregates from SQLite
-3. UI renders KPIs, RAG donut, budget, initiatives table
+3. UI renders KPIs, Red/Amber/Green (RAG status) donut, budget, initiatives table
+
+> **Note on “RAG”:** in this repo, **RAG means Red / Amber / Green** project
+> health — not Retrieval-Augmented Generation. We deliberately avoid
+> retrieval-over-raw-rows for operational numbers; see the pattern above.
 
 ### Chat turn
 
 1. `POST /api/chat` `{ message, session_id? }`
 2. Router rebuilds portfolio context (fresh numbers every turn)
-3. LangGraph runs with `thread_id = session_id` (SQLite checkpointer)
+3. LangGraph runs with `thread_id = session_id` — the SQLite checkpointer only
+   stores prior messages for that session so follow-ups like “tell me more”
+   work (again: conversation memory, not embeddings)
 4. Response includes `answer`, `data_version`, `session_id`
 5. UI strips `Source: …` into a citation badge; TTS omits the citation line
 
@@ -79,6 +86,41 @@ token from `/api/speech/token` (refreshed at 9 minutes; STS expires at 10).
 2. Mic → Azure STT (`recognizeOnceAsync`)
 3. Transcript → `/api/chat`
 4. Answer → Azure Neural TTS (SSML rate control)
+
+---
+
+## Context size and scale
+
+Traditional list APIs paginate (`?limit=50&offset=100`). The LLM instead has a
+**token budget** for whatever you put in the system prompt.
+
+**What this reference does today**
+
+- Always inject **rolled-up aggregates** from `compute_overview()` (counts,
+  budget totals, status / risk breakdowns, executive summary).
+- Also inject a **line per parent initiative** (name, status, Red/Amber/Green,
+  risk, completion, owner, budget) so the model can answer “tell me about X.”
+- Seeded demo size is small (~6 parents). That fits comfortably in one prompt.
+
+**What happens at 500 active projects?**
+
+The current builder does **not** paginate or hard-cap the detail list. Dumping
+every row into the prompt will eventually hit model context limits, raise cost,
+and degrade answer quality. That is an intentional adaptation point, not a
+hidden magically-scaled feature.
+
+**When you adapt a large domain, keep aggregates always; shrink detail:**
+
+| Strategy | When to use |
+|---|---|
+| Aggregates only + watchlist / exceptions | Default for large portfolios |
+| Top-N by risk, variance, or area | Leadership “what needs attention?” |
+| Filter in `build_*_context()` (status, area, owner) | User already narrowed the question |
+| Tool calling for drill-down (scaffold in `tools.py`) | “Tell me about project X” without listing all rows |
+
+APIs for the UI can still paginate independently — dashboard tables and LLM
+context are separate concerns. Do not assume “the chat path inherits UI
+pagination.”
 
 ---
 
